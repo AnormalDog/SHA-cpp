@@ -10,9 +10,9 @@
  */
 
 #include "SHA256/sha256.hpp"
-#include <fstream>
 #include <cassert>
 #include <iostream>
+#include <cstring>
 
 namespace sha256 {
   namespace constants {
@@ -37,19 +37,19 @@ namespace sha256 {
   }
 }
 
-uint32_t sha256::schedule_sigma(const uint8_t current_position, const uint32_t* schedule) {
+uint32_t sha256::functions::schedule_sigma(const uint8_t current_position, const uint32_t* schedule) {
   assert(current_position >= 0 && current_position < 64);
   if (current_position >= 0 && current_position < 16) {
     return schedule[current_position];
   }
-  const uint32_t aux0 = functions::schedule_sigma1(schedule[current_position - 2]);
+  const uint32_t aux0 = schedule_sigma1(schedule[current_position - 2]);
   const uint32_t aux1 = schedule[current_position - 7];
-  const uint32_t aux2 = functions::schedule_sigma0(schedule[current_position - 15]);
+  const uint32_t aux2 = schedule_sigma0(schedule[current_position - 15]);
   const uint32_t aux3 = schedule[current_position - 16];
   return (aux0 + aux1 + aux2 + aux3);
 }
 
-std::array<uint32_t, 16> sha256::get_next_block(std::istream& is, bool& one_was_written, bool& finished_preprocess, uint64_t& total_bytes_readed) {
+uint32_t* sha256::get_next_block(std::istream& is, bool& one_was_written, bool& finished_preprocess, uint64_t& total_bytes_readed) {
   uint8_t readed_bytes[64];
   is.read(reinterpret_cast<char*>(readed_bytes), 64);
   uint64_t bytes_readed = static_cast<uint64_t>(is.gcount());
@@ -73,25 +73,86 @@ std::array<uint32_t, 16> sha256::get_next_block(std::istream& is, bool& one_was_
     }
     functions::append_zero_padding(functions::get_zero_padding(bytes_readed), bytes_readed, readed_bytes);
   }
-  unsigned a = 0;
-  while (a < 64) {
-    std::cout << std::hex << std::setfill('0') << std::setw(2) << +readed_bytes[a];
-    std::cout << std::hex << std::setfill('0') << std::setw(2) << +readed_bytes[a+1];
-    std::cout << std::hex << std::setfill('0') << std::setw(2) << +readed_bytes[a+2];
-    std::cout << std::hex << std::setfill('0') << std::setw(2) << +readed_bytes[a+3];
-    std::cout << std::endl;
-    a += 4;
-  }
+
   return functions::group_block(readed_bytes);
 }
 
-std::array<uint32_t, 16> sha256::functions::group_block(const uint8_t* block) {
+uint32_t* sha256::functions::group_block(const uint8_t* block) {
   uint8_t aux = 0;
-  std::array<uint32_t, 16> to_return;
+  uint32_t* to_return = new uint32_t[16];
   while (aux < 64) {
     const uint32_t row = group_bytes(block[aux], block[aux + 1], block[aux + 2], block[aux + 3]);
     to_return[(aux / 4)] = row;
     aux += 4;
   }
   return to_return;
+}
+
+void sha256::compute_block(uint32_t* block, uint32_t* hash) {
+  uint32_t* schedule = new uint32_t[64];
+  // Calculate schedule
+  for (size_t i = 0; i < 64; ++i) {
+    if (i < 16) {
+      schedule[i] = block[i];
+    }
+    else {
+      schedule[i] = functions::schedule_sigma(i, schedule);
+    }
+  }
+
+  // Calculate intermediate hash part
+  uint32_t* temporal_hash = new uint32_t[8];
+  std::memcpy(temporal_hash, hash, 8);
+  
+  for (size_t i = 0; i < 64; ++i) {
+    uint32_t T1 = functions::calculate_T1(i, temporal_hash, schedule);
+    uint32_t T2 = functions::calculate_T2(i, temporal_hash, schedule);
+    temporal_hash[7] = temporal_hash[6];
+    temporal_hash[6] = temporal_hash[5];
+    temporal_hash[5] = temporal_hash[4];
+    temporal_hash[4] = (temporal_hash[3] + T1);
+    temporal_hash[3] = temporal_hash[2];
+    temporal_hash[2] = temporal_hash[1];
+    temporal_hash[1] = temporal_hash[0];
+    temporal_hash[0] = (T1 + T2);
+  }
+  std::memcpy(hash, temporal_hash, 8);
+
+  delete[] temporal_hash;
+  delete[] schedule;
+}
+
+uint32_t sha256::functions::calculate_T1(const uint8_t iteration, const uint32_t* variables, const uint32_t* schedule) {
+  const uint32_t aux0 = variables[7];
+  const uint32_t aux1 = schedule_sigma1(variables[4]);
+  const uint32_t aux2 = hashing_choose(variables[4], variables[5], variables[6]);
+  const uint32_t aux3 = constants::k_constants[iteration];
+  const uint32_t aux4 = schedule[iteration];
+  return (aux0 + aux1 + aux2 + aux3 + aux4);
+}
+
+uint32_t sha256::functions::calculate_T2(const uint8_t iteration, const uint32_t* variables, const uint32_t* schedule) {
+  const uint32_t aux0 = schedule_sigma0(variables[0]);
+  const uint32_t aux1 = hashing_majority(variables[0], variables[1], variables[2]);
+  return (aux0 + aux1);
+}
+
+void sha256::get_hash(std::istream& is) {
+  uint32_t* hash = new uint32_t[8];
+  std::memcpy(hash, constants::initial_hash_value, 8);
+
+  uint64_t bytes_readed = 0;
+  bool one_was_written = false;
+  bool finished_preprocess = false;
+  
+  uint32_t* block_pointer = nullptr;
+  while (finished_preprocess == false) {
+    block_pointer = get_next_block(is, one_was_written, finished_preprocess, bytes_readed);
+    compute_block(block_pointer, hash);
+
+    delete[] block_pointer;
+    block_pointer = nullptr;
+  }
+
+  delete[] hash;
 }

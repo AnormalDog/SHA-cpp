@@ -14,9 +14,6 @@
 
 #include <cstdint>
 #include <iostream>
-#include <array>
-
-#include <iomanip>
 
 namespace sha256 {
   namespace constants {
@@ -39,12 +36,18 @@ namespace sha256 {
     inline uint8_t get_zero_padding(const uint8_t bytes_readed);
     inline void append_bytes_readed(const uint64_t bytes_readed, uint8_t* schedule);
     inline void append_zero_padding(const uint8_t zero_padding, const uint8_t position, uint8_t* schedule);
-    std::array<uint32_t, 16> group_block(const uint8_t* preprocess_block);
+    uint32_t* group_block(const uint8_t* preprocess_block);
+
+    uint32_t calculate_T1(const uint8_t iteration, const uint32_t* variables, const uint32_t* schedule);
+    uint32_t calculate_T2(const uint8_t iteration, const uint32_t* variables, const uint32_t* schedule);
+    uint32_t schedule_sigma(const uint8_t current_position, const uint32_t* schedule);
+
   }
   
-  uint32_t schedule_sigma(const uint8_t current_position, const uint32_t* schedule);
+  uint32_t* get_next_block(std::istream& is, bool& one_was_written, bool& finished_preprocess, uint64_t& total_bytes_readed);
+  void compute_block(uint32_t* block, uint32_t* hash);
 
-  std::array<uint32_t, 16> get_next_block(std::istream& is, bool& one_was_written, bool& finished_preprocess, uint64_t& total_bytes_readed);
+  void get_hash(std::istream& is);
 
 }
 
@@ -80,6 +83,7 @@ uint32_t sha256::functions::hashing_choose(const uint32_t num1, const uint32_t n
 
 uint32_t sha256::functions::group_bytes(const uint8_t num0, const uint8_t num1, const uint8_t num2, const uint8_t num3) {
   return (
+    // Endianess sensible, only works on little endian
     static_cast<uint32_t>(num0 << 24) | 
     static_cast<uint32_t>(num1 << 16) | 
     static_cast<uint32_t>(num2 << 8) | 
@@ -93,20 +97,22 @@ uint8_t sha256::functions::get_zero_padding(const uint8_t bytes_readed) {
 }
 
 void sha256::functions::append_bytes_readed(const uint64_t bytes_readed, uint8_t* schedule) {
-  schedule[63] = static_cast<uint8_t>(bytes_readed);
-  schedule[62] = static_cast<uint8_t>(bytes_readed >> 8);
-  schedule[61] = static_cast<uint8_t>(bytes_readed >> 16);
-  schedule[60] = static_cast<uint8_t>(bytes_readed >> 24);
+  schedule[63] = static_cast<uint8_t>((bytes_readed * 8));
+  schedule[62] = static_cast<uint8_t>((bytes_readed * 8) >> 8);
+  schedule[61] = static_cast<uint8_t>((bytes_readed * 8) >> 16);
+  schedule[60] = static_cast<uint8_t>((bytes_readed * 8) >> 24);
 
-  schedule[59] = static_cast<uint8_t>(bytes_readed >> 32);
-  schedule[58] = static_cast<uint8_t>(bytes_readed >> 40);
-  schedule[57] = static_cast<uint8_t>(bytes_readed >> 48);
-  schedule[56] = static_cast<uint8_t>(bytes_readed >> 56);
+  schedule[59] = static_cast<uint8_t>((bytes_readed * 8) >> 32);
+  schedule[58] = static_cast<uint8_t>((bytes_readed * 8) >> 40);
+  schedule[57] = static_cast<uint8_t>((bytes_readed * 8) >> 48);
+  schedule[56] = static_cast<uint8_t>((bytes_readed * 8) >> 56);
 }
 
 void sha256::functions::append_zero_padding(const uint8_t zero_padding, const uint8_t position, uint8_t* schedule) {
   for (std::size_t i = 0; i < zero_padding; ++i) {
-    schedule[position + i] = 0x00;
+    if (position + i < 64) {
+      schedule[position + i] = 0x00;
+    }
   }
 }
 
