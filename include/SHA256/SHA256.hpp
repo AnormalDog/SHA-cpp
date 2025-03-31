@@ -78,5 +78,4 @@ uint32_t sha256::basic::hashing_choose(const uint32_t num1, const uint32_t num2,
   return ((num1 & num2) ^ (~num1 & num3));
 }
 
-
 #endif
