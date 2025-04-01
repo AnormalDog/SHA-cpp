@@ -190,7 +190,7 @@ uint32_t sha256::functions::calculate_T2(const uint8_t iteration, const uint32_t
  * 
  * @param is 
  * @return Hash256 
- */
+*/
 Hash256 sha256::get_hash(std::istream& is) {
   uint32_t* hash = new uint32_t[8];
   for (size_t i = 0; i < 8; ++i) {
