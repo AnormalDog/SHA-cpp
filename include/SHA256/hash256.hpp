@@ -16,6 +16,10 @@
 #include <array>
 #include <string>
 
+/**
+ * @brief class that represent an abstraction of a hash256
+ * 
+ */
 class Hash256 {
   public:
     Hash256();

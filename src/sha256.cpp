@@ -12,8 +12,6 @@
 #include "SHA256/sha256.hpp"
 #include <cassert>
 #include <iostream>
-#include <cstring>
-#include <iomanip>
 
 namespace sha256 {
   namespace constants {
@@ -38,6 +36,13 @@ namespace sha256 {
   }
 }
 
+/**
+ * @brief Calculate the sigma in the schedule part
+ * 
+ * @param current_position 
+ * @param schedule 
+ * @return uint32_t 
+ */
 uint32_t sha256::functions::schedule_sigma(const uint8_t current_position, const uint32_t* schedule) {
   assert(current_position >= 0 && current_position < 64);
   if (current_position >= 0 && current_position < 16) {
@@ -50,6 +55,15 @@ uint32_t sha256::functions::schedule_sigma(const uint8_t current_position, const
   return (aux0 + aux1 + aux2 + aux3);
 }
 
+/**
+ * @brief Returns a pointer to an array, who is the next processed block
+ * 
+ * @param is 
+ * @param one_was_written 
+ * @param finished_preprocess 
+ * @param total_bytes_readed 
+ * @return uint32_t* 
+ */
 uint32_t* sha256::get_next_block(std::istream& is, bool& one_was_written, bool& finished_preprocess, uint64_t& total_bytes_readed) {
   uint8_t readed_bytes[64];
   is.read(reinterpret_cast<char*>(readed_bytes), 64);
@@ -78,6 +92,12 @@ uint32_t* sha256::get_next_block(std::istream& is, bool& one_was_written, bool& 
   return functions::group_block(readed_bytes);
 }
 
+/**
+ * @brief group the uint8_t[64] block into uint8_t[16] block
+ * 
+ * @param block 
+ * @return uint32_t* 
+ */
 uint32_t* sha256::functions::group_block(const uint8_t* block) {
   uint8_t aux = 0;
   uint32_t* to_return = new uint32_t[16];
@@ -89,6 +109,12 @@ uint32_t* sha256::functions::group_block(const uint8_t* block) {
   return to_return;
 }
 
+/**
+ * @brief Compute the current block
+ * 
+ * @param block 
+ * @param hash 
+ */
 void sha256::compute_block(uint32_t* block, uint32_t* hash) {
   uint32_t* schedule = new uint32_t[64];
   // Calculate schedule
@@ -123,10 +149,19 @@ void sha256::compute_block(uint32_t* block, uint32_t* hash) {
     hash[i] = temporal_hash[i] + hash[i];
   }
 
+  // Free allocated memory
   delete[] temporal_hash;
   delete[] schedule;
 }
 
+/**
+ * @brief Calculate temp1
+ * 
+ * @param iteration 
+ * @param variables 
+ * @param schedule 
+ * @return uint32_t 
+ */
 uint32_t sha256::functions::calculate_T1(const uint8_t iteration, const uint32_t* variables, const uint32_t* schedule) {
   const uint32_t aux0 = variables[7];
   const uint32_t aux1 = hashing_sigma1(variables[4]);
@@ -136,12 +171,26 @@ uint32_t sha256::functions::calculate_T1(const uint8_t iteration, const uint32_t
   return (aux0 + aux1 + aux2 + aux3 + aux4);
 }
 
+/**
+ * @brief Calculate temp2
+ * 
+ * @param iteration 
+ * @param variables 
+ * @param schedule 
+ * @return uint32_t 
+ */
 uint32_t sha256::functions::calculate_T2(const uint8_t iteration, const uint32_t* variables, const uint32_t* schedule) {
   const uint32_t aux0 = hashing_sigma0(variables[0]);
   const uint32_t aux1 = hashing_majority(variables[0], variables[1], variables[2]);
   return (aux0 + aux1);
 }
 
+/**
+ * @brief Returns a hash256 object, that contains the hash of the buffer
+ * 
+ * @param is 
+ * @return Hash256 
+ */
 Hash256 sha256::get_hash(std::istream& is) {
   uint32_t* hash = new uint32_t[8];
   for (size_t i = 0; i < 8; ++i) {
