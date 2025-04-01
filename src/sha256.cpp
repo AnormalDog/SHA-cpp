@@ -13,6 +13,7 @@
 #include <cassert>
 #include <iostream>
 #include <cstring>
+#include <iomanip>
 
 namespace sha256 {
   namespace constants {
@@ -102,7 +103,9 @@ void sha256::compute_block(uint32_t* block, uint32_t* hash) {
 
   // Calculate intermediate hash part
   uint32_t* temporal_hash = new uint32_t[8];
-  std::memcpy(temporal_hash, hash, 8);
+  for (std::size_t i = 0; i < 8; ++i) {
+    temporal_hash[i] = hash[i];
+  }
   
   for (size_t i = 0; i < 64; ++i) {
     uint32_t T1 = functions::calculate_T1(i, temporal_hash, schedule);
@@ -116,7 +119,9 @@ void sha256::compute_block(uint32_t* block, uint32_t* hash) {
     temporal_hash[1] = temporal_hash[0];
     temporal_hash[0] = (T1 + T2);
   }
-  std::memcpy(hash, temporal_hash, 8);
+  for (size_t i = 0; i < 8; ++i) {
+    hash[i] = temporal_hash[i] + hash[i];
+  }
 
   delete[] temporal_hash;
   delete[] schedule;
@@ -124,7 +129,7 @@ void sha256::compute_block(uint32_t* block, uint32_t* hash) {
 
 uint32_t sha256::functions::calculate_T1(const uint8_t iteration, const uint32_t* variables, const uint32_t* schedule) {
   const uint32_t aux0 = variables[7];
-  const uint32_t aux1 = schedule_sigma1(variables[4]);
+  const uint32_t aux1 = hashing_sigma1(variables[4]);
   const uint32_t aux2 = hashing_choose(variables[4], variables[5], variables[6]);
   const uint32_t aux3 = constants::k_constants[iteration];
   const uint32_t aux4 = schedule[iteration];
@@ -132,14 +137,16 @@ uint32_t sha256::functions::calculate_T1(const uint8_t iteration, const uint32_t
 }
 
 uint32_t sha256::functions::calculate_T2(const uint8_t iteration, const uint32_t* variables, const uint32_t* schedule) {
-  const uint32_t aux0 = schedule_sigma0(variables[0]);
+  const uint32_t aux0 = hashing_sigma0(variables[0]);
   const uint32_t aux1 = hashing_majority(variables[0], variables[1], variables[2]);
   return (aux0 + aux1);
 }
 
-void sha256::get_hash(std::istream& is) {
+Hash256 sha256::get_hash(std::istream& is) {
   uint32_t* hash = new uint32_t[8];
-  std::memcpy(hash, constants::initial_hash_value, 8);
+  for (size_t i = 0; i < 8; ++i) {
+    hash[i] = constants::initial_hash_value[i];
+  }
 
   uint64_t bytes_readed = 0;
   bool one_was_written = false;
@@ -153,6 +160,9 @@ void sha256::get_hash(std::istream& is) {
     delete[] block_pointer;
     block_pointer = nullptr;
   }
+  Hash256 to_return(hash);
 
   delete[] hash;
+
+  return to_return;
 }

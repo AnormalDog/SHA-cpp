@@ -12,6 +12,7 @@
 #ifndef SHA256_HPP_
 #define SHA256_HPP_
 
+#include "SHA256/hash256.hpp"
 #include <cstdint>
 #include <iostream>
 
@@ -45,9 +46,9 @@ namespace sha256 {
   }
   
   uint32_t* get_next_block(std::istream& is, bool& one_was_written, bool& finished_preprocess, uint64_t& total_bytes_readed);
-  void compute_block(uint32_t* block, uint32_t* hash);
+  void compute_block(uint32_t* block, uint32_t* Hash256);
 
-  void get_hash(std::istream& is);
+  Hash256 get_hash(std::istream& is);
 
 }
 

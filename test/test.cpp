@@ -1,16 +1,20 @@
 #include "SHA256/sha256.hpp"
+#include "SHA256/hash256.hpp"
 #include <sstream>
+#include <fstream>
 #include <iostream>
 #include <iomanip>
 
 int main() {
   std::string string ("jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj");
   std::stringstream stream(string);
-  bool one_was_written = false;
-  bool finished_preprocess = false;
-  uint64_t bytes_written = 0;
 
-  sha256::get_hash(stream);
+  std::ifstream file_in("image1.jpg");
 
+
+  Hash256 aux = sha256::get_hash(file_in);
+  std::cout << aux.get_hex() << std::endl;
+
+  file_in.close();
   return 0;
 }
