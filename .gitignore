@@ -34,3 +34,5 @@
 # Directories
 out/
 build/
+.vscode/
+test/
