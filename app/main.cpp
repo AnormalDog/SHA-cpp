@@ -31,7 +31,8 @@ int main(int argc, char** argv) {
 std::string get_hash(const std::string& file_name) {
   std::ifstream file(file_name);
   if (file.is_open() == false) {
-    return "no file found!";
+    file.close();
+    return "file not found!";
   }
   std::string to_return = sha256::get_hash(file);
   file.close();
