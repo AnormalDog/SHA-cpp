@@ -10,7 +10,6 @@
  */
 
 #include "SHA256/sha256.hpp"
-#include "SHA256/hash256.hpp"
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -34,7 +33,7 @@ std::string get_hash(const std::string& file_name) {
   if (file.is_open() == false) {
     return "no file found!";
   }
-  std::string to_return = sha256::get_hash(file).get_hex();
+  std::string to_return = sha256::get_hash(file);
   file.close();
   return to_return;
 }

@@ -12,9 +12,9 @@
 #ifndef SHA256_HPP_
 #define SHA256_HPP_
 
-#include "SHA256/hash256.hpp"
 #include <cstdint>
 #include <iostream>
+#include <string>
 
 namespace sha256 {
   namespace constants {
@@ -43,12 +43,15 @@ namespace sha256 {
     uint32_t calculate_T2(const uint8_t iteration, const uint32_t* variables, const uint32_t* schedule);
     uint32_t schedule_sigma(const uint8_t current_position, const uint32_t* schedule);
 
+
+    uint32_t* get_next_block(std::istream& is, bool& one_was_written, bool& finished_preprocess, uint64_t& total_bytes_readed);
+    void compute_block(uint32_t* block, uint32_t* Hash256);
+
+    std::string get_hex(const uint32_t* hash);
   }
   
-  uint32_t* get_next_block(std::istream& is, bool& one_was_written, bool& finished_preprocess, uint64_t& total_bytes_readed);
-  void compute_block(uint32_t* block, uint32_t* Hash256);
 
-  Hash256 get_hash(std::istream& is);
+  std::string get_hash(std::istream& is);
 
 }
 

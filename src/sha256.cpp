@@ -12,6 +12,8 @@
 #include "SHA256/sha256.hpp"
 #include <cassert>
 #include <iostream>
+#include <iomanip>
+#include <sstream>
 
 namespace sha256 {
   namespace constants {
@@ -64,7 +66,7 @@ uint32_t sha256::functions::schedule_sigma(const uint8_t current_position, const
  * @param total_bytes_readed 
  * @return uint32_t* 
  */
-uint32_t* sha256::get_next_block(std::istream& is, bool& one_was_written, bool& finished_preprocess, uint64_t& total_bytes_readed) {
+uint32_t* sha256::functions::get_next_block(std::istream& is, bool& one_was_written, bool& finished_preprocess, uint64_t& total_bytes_readed) {
   uint8_t readed_bytes[64];
   is.read(reinterpret_cast<char*>(readed_bytes), 64);
   uint64_t bytes_readed = static_cast<uint64_t>(is.gcount());
@@ -115,7 +117,7 @@ uint32_t* sha256::functions::group_block(const uint8_t* block) {
  * @param block 
  * @param hash 
  */
-void sha256::compute_block(uint32_t* block, uint32_t* hash) {
+void sha256::functions::compute_block(uint32_t* block, uint32_t* hash) {
   uint32_t* schedule = new uint32_t[64];
   // Calculate schedule
   for (size_t i = 0; i < 64; ++i) {
@@ -191,7 +193,7 @@ uint32_t sha256::functions::calculate_T2(const uint8_t iteration, const uint32_t
  * @param is 
  * @return Hash256 
 */
-Hash256 sha256::get_hash(std::istream& is) {
+std::string sha256::get_hash(std::istream& is) {
   uint32_t* hash = new uint32_t[8];
   for (size_t i = 0; i < 8; ++i) {
     hash[i] = constants::initial_hash_value[i];
@@ -203,15 +205,29 @@ Hash256 sha256::get_hash(std::istream& is) {
   
   uint32_t* block_pointer = nullptr;
   while (finished_preprocess == false) {
-    block_pointer = get_next_block(is, one_was_written, finished_preprocess, bytes_readed);
-    compute_block(block_pointer, hash);
+    block_pointer = functions::get_next_block(is, one_was_written, finished_preprocess, bytes_readed);
+    functions::compute_block(block_pointer, hash);
 
     delete[] block_pointer;
     block_pointer = nullptr;
   }
-  Hash256 to_return(hash);
+  std::string to_return = functions::get_hex(hash);
 
   delete[] hash;
-
   return to_return;
+}
+
+/**
+ * @brief return the sha256 in hex format
+ * 
+ * @param hash 
+ * @return std::string 
+ */
+std::string sha256::functions::get_hex(const uint32_t* hash) {
+  std::stringstream stream;
+  stream << std::hex << std::setfill('0');
+  for (std::size_t i = 0; i < 8; ++i) {
+    stream << std::setw(8) << hash[i];
+  }
+  return stream.str();
 }
