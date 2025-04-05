@@ -5,5 +5,5 @@
 - Compile the sha256.cpp
 - (or just check the CMakeLists.txt and modify/add them to fit your needs)
 - Call it with sha256::get_hash(\<stream\>);
-- The stream, due it uses the base class istream, can be neither a istream, a ifstream or a stringstream
-- Returns a string with the hash in hex format
+- The stream, due it uses the base class std::istream, can be neither a std::istream, a std::ifstream or a std::stringstream
+- Returns a string with the hash in hex format (big endian)
