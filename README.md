@@ -1,5 +1,5 @@
-# SHA256
-## Simple c++ library that calculate the sha256 hash of a input stream. 
+# 
+## Simple c++ library that calculate the sha hash of a input stream. 
 ### USAGE
 - Include the sha256.hpp to your program and compile it. Doesn´t require any external library.
 - Compile the sha256.cpp
