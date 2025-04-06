@@ -20,6 +20,14 @@ namespace sha512 {
   namespace constants {
     extern const uint64_t k_constants[80];
   }
+  namespace functions {
+    inline uint16_t get_zero_padding(const uint16_t bytes_readed);
+  }
+}
+
+
+uint16_t sha512::functions::get_zero_padding(const uint16_t bytes_readed) {
+  return (112 - bytes_readed);
 }
 
 #endif
