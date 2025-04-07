@@ -13,7 +13,6 @@
 #include <cassert>
 #include <iostream>
 #include <iomanip>
-#include <sstream>
 
 namespace sha256 {
   namespace constants {
