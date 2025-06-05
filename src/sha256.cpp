@@ -1,13 +1,8 @@
 /**
- * @file SHA256.cpp
- * @author AnormalDog
- * @brief 
- * @version 1.0
- * @date 2025-03-29
- * 
- * @copyright Copyright (c) 2025
- * 
- */
+ * Author: AnormalDog (https://github.com/AnormalDog)
+ * Copyright (c) 2025 AnormalDog
+ * Licensed under the MIT License. See LICENSE file in the project root for full license information.
+*/
 
 #include "SHA256/sha256.hpp"
 #include <cassert>

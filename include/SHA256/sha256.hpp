@@ -1,13 +1,8 @@
 /**
- * @file SHA256.hpp
- * @author AnormalDog
- * @brief 
- * @version 1.0
- * @date 2025-03-29
- * 
- * @copyright Copyright (c) 2025
- * 
- */
+ * Author: AnormalDog (https://github.com/AnormalDog)
+ * Copyright (c) 2025 AnormalDog
+ * Licensed under the MIT License. See LICENSE file in the project root for full license information.
+*/
 
 #ifndef SHA256_HPP_
 #define SHA256_HPP_
